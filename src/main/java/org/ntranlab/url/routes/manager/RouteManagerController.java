@@ -44,6 +44,7 @@ public class RouteManagerController {
     @RequestMapping(value = "/routes", method = RequestMethod.POST)
     @ResponseBody
     public CreateRouteResponse shorten(@RequestBody RouteOptions options) {
+        logger.info("RouteManagerController.shorten: " + options.toString());
         return this.routerService
                 .addRoute(options);
     }
@@ -62,6 +63,7 @@ public class RouteManagerController {
     public List<Route> getRoutes(
             Optional<Query> query,
             @RequestParam(name = "id", required = false) Optional<List<String>> ids) {
+        logger.info("RouteManagerController.getRoutes: " + query.toString() + " " + ids);
         List<String> providedIds = ids.orElse(new ArrayList<>());
         Pageable pageable = query.orElse(Query.builder()
                 .size(20)
@@ -82,6 +84,7 @@ public class RouteManagerController {
     @ResponseBody
     public void enableRoute(
             @RequestParam(name = "id") String id) {
+        logger.info("RouteManagerController.enableRoute: " + id);
         this.routeManagementService
                 .enableRoute(id);
     }
@@ -95,6 +98,7 @@ public class RouteManagerController {
     @ResponseBody
     public void disableRoute(
             @RequestParam(name = "id") String id) {
+        logger.info("RouteManagerController.disableRoute: " + id);
         this.routeManagementService
                 .disableRoute(id);
     }
@@ -108,6 +112,7 @@ public class RouteManagerController {
     @RequestMapping(value = "/routes/delete", method = RequestMethod.POST)
     @ResponseBody
     public void deleteRoute(@RequestParam(name = "id") String id) {
+        logger.info("RouteManagerController.deleteRoute: " + id);
         this.routeManagementService
                 .deleteRoute(id);
     }
