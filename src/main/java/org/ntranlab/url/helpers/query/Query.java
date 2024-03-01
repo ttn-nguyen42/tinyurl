@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -78,7 +79,9 @@ public class Query {
     @AllArgsConstructor
     @NoArgsConstructor
     private static class SortField {
+        @NonNull
         private String name;
+        @NonNull
         private Sort.Direction direction;
 
         public static Optional<SortField> fromString(String s) {

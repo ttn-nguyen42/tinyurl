@@ -1,5 +1,7 @@
 package org.ntranlab.url.models.redirect;
 
+import org.springframework.lang.NonNull;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,5 +16,6 @@ import lombok.ToString;
 @ToString
 @Builder
 public class RedirectResult {
+    @NonNull
     String destination;
 }
