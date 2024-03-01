@@ -60,17 +60,30 @@ public class RouteManagerController {
     @RequestMapping(value = "/routes", method = RequestMethod.GET)
     @ResponseBody
     public List<Route> getRoutes(
-            @RequestParam(required = false) Optional<Query> query,
+            Optional<Query> query,
             @RequestParam(name = "id", required = false) Optional<List<String>> ids) {
         List<String> providedIds = ids.orElse(new ArrayList<>());
         Pageable pageable = query.orElse(Query.builder()
                 .size(20)
                 .page(0)
-                .sort(new String[] { "id,asc" })
+                .sort(new String[] { "id:asc" })
                 .build()).toPageable();
         System.out.println(pageable.toString());
         return this.routeManagementService
                 .getRoutes(providedIds, pageable);
+    }
+
+    /**
+     * Enables a route, llowing it to be used publically
+     * 
+     * @param id ID of the route
+     */
+    @RequestMapping(value = "/routes/enable", method = RequestMethod.POST)
+    @ResponseBody
+    public void enableRoute(
+            @RequestParam(name = "id") String id) {
+        this.routeManagementService
+                .enableRoute(id);
     }
 
     /**
@@ -80,12 +93,14 @@ public class RouteManagerController {
      */
     @RequestMapping(value = "/routes/disable", method = RequestMethod.POST)
     @ResponseBody
-    public void disableRoute(@RequestParam(name = "id") String id) {
+    public void disableRoute(
+            @RequestParam(name = "id") String id) {
         this.routeManagementService
                 .disableRoute(id);
     }
 
     /**
+     * 
      * Deletes a route completely
      * 
      * @param id ID of the route

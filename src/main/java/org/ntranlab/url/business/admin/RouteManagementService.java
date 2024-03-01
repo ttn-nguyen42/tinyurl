@@ -1,9 +1,11 @@
 package org.ntranlab.url.business.admin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
+import org.ntranlab.url.helpers.query.QueryExecutor;
 import org.ntranlab.url.models.routes.PSRouteRepository;
 import org.ntranlab.url.models.routes.Route;
 import org.ntranlab.url.models.routes.RouteRepository;
@@ -28,17 +30,56 @@ public class RouteManagementService {
      * @return List of routes
      */
     public List<Route> getRoutes(List<String> ids, Pageable pageable) {
-        if (ids.isEmpty() && pageable != null) {
-            return this.psRouteRepository
-                    .findAll(pageable)
-                    .stream()
-                    .toList();
-        }
-        return this.psRouteRepository.findAllByIdIsIn(
-                ids,
-                pageable)
-                .stream()
-                .toList();
+        return QueryExecutor
+                .<List<Route>>builder()
+                .pageable(pageable)
+                .onPaged(p -> {
+                    if (ids.isEmpty()) {
+                        return this.psRouteRepository.findAll(p)
+                                .stream()
+                                .toList();
+                    }
+                    return this.psRouteRepository.findAllByIdIsIn(ids, p)
+                            .stream()
+                            .toList();
+                })
+                .onSorted(s -> {
+                    List<Route> routes = new ArrayList<>();
+                    if (ids.isEmpty()) {
+                        this.psRouteRepository.findAll(s)
+                                .iterator()
+                                .forEachRemaining(routes::add);
+                        return routes;
+                    }
+                    this.psRouteRepository.findAllByIdIsIn(ids, s)
+                            .iterator()
+                            .forEachRemaining(routes::add);
+                    return routes;
+                })
+                .onUnpaged(() -> {
+                    if (ids.isEmpty()) {
+                        List<Route> routes = new ArrayList<>();
+                        this.routeRepository.findAll()
+                                .iterator()
+                                .forEachRemaining(routes::add);
+                        return routes;
+                    }
+                    return this.routeRepository.findAllByIdIsIn(ids)
+                            .stream()
+                            .toList();
+                })
+                .onUnsorted(p -> {
+                    if (ids.isEmpty()) {
+                        return this.psRouteRepository.findAll(p)
+                                .stream()
+                                .toList();
+                    }
+                    return this.psRouteRepository.findAllByIdIsIn(ids, p)
+                            .stream()
+                            .toList();
+                })
+                .build()
+                .run();
     }
 
     /**
@@ -57,7 +98,33 @@ public class RouteManagementService {
         }
 
         Route updatedRoute = route.get();
+        if (updatedRoute.isDisabled()) {
+            return;
+        }
         updatedRoute.setDisabled(true);
+        this.routeRepository.save(updatedRoute);
+    }
+
+    /**
+     * Enable a route to be used
+     * 
+     * @param id ID of the route
+     */
+    public void enableRoute(String id) {
+        if (id.isEmpty()) {
+            throw new BadRequestException("id is required");
+        }
+
+        Optional<Route> route = this.routeRepository.findById(id);
+        if (route.isEmpty()) {
+            throw new BadRequestException("route not found");
+        }
+
+        Route updatedRoute = route.get();
+        if (!updatedRoute.isDisabled()) {
+            return;
+        }
+        updatedRoute.setDisabled(false);
         this.routeRepository.save(updatedRoute);
     }
 

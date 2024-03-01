@@ -40,7 +40,7 @@ public class RouterService {
         this.validateRoute(model);
 
         Optional<Route> existingRoute = this.routeRepository
-                .findEnabledByAlias(model.getAlias());
+                .findByAliasAndEnabled(model.getAlias());
         if (existingRoute.isPresent()) {
             throw new AlreadyExistsException("alias is already taken");
         }

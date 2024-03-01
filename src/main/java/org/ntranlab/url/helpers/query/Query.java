@@ -1,12 +1,19 @@
 package org.ntranlab.url.helpers.query;
 
-import lombok.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
-import java.util.ArrayList;
-import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -23,23 +30,36 @@ public class Query {
         if (this.isEmpty()) {
             return Pageable.unpaged();
         }
-        Sort sort = Sort.by(new ArrayList<>());
+        List<Sort.Order> orders = new ArrayList<>();
         if (this.sort != null) {
             for (String s : this.sort) {
                 SortField.fromString(s)
-                        .map(f -> Sort.by(f.getDirection(), f.getName()))
-                        .ifPresent(sort::and);
+                        .map(f -> switch (f.getDirection()) {
+                            case ASC -> Sort.Order.asc(f.getName());
+                            case DESC -> Sort.Order.desc(f.getName());
+                        })
+                        .ifPresent(orders::add);
             }
         }
 
-        if (this.isUnpaged()) {
-            return Pageable.unpaged(sort);
+        if (orders.isEmpty()) {
+            if (this.isUnpaged()) {
+                return Pageable.unpaged();
+            }
+            return PageRequest.of(
+                    this.getPage(),
+                    this.getSize(),
+                    Sort.unsorted());
+
         }
 
+        if (this.isUnpaged()) {
+            return Pageable.unpaged(Sort.by(orders));
+        }
         return PageRequest.of(
                 this.getPage(),
                 this.getSize(),
-                sort);
+                Sort.by(orders));
     }
 
     public boolean isUnpaged() {
@@ -65,21 +85,31 @@ public class Query {
             if (s.isEmpty()) {
                 return Optional.empty();
             }
-            String[] splitted = s.split(",", 2);
+            String[] splitted = s.split(":", 2);
             if (splitted.length == 0) {
+                return Optional.empty();
+            }
+            String name = splitted[0];
+            if (name == null || name.isEmpty()) {
                 return Optional.empty();
             }
             if (splitted.length == 1) {
                 return Optional.of(SortField.builder()
                         .direction(Sort.Direction.ASC)
-                        .name(splitted[0])
+                        .name(name)
                         .build());
             }
             String dir = splitted[1];
+            if (dir == null || dir.isEmpty()) {
+                return Optional.of(SortField.builder()
+                        .direction(Sort.Direction.ASC)
+                        .name(name)
+                        .build());
+            }
             Sort.Direction direction = Sort.Direction.fromString(dir);
             return Optional.of(SortField.builder()
                     .direction(direction)
-                    .name(splitted[0])
+                    .name(name)
                     .build());
         }
     }
