@@ -1,8 +1,11 @@
 package org.ntranlab.url.business.routers;
 
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.ntranlab.url.business.statistics.StatisticsManager;
 import org.ntranlab.url.helpers.exceptions.types.AlreadyExistsException;
 import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
 import org.ntranlab.url.helpers.exceptions.types.NotFoundException;
@@ -19,10 +22,15 @@ import org.springframework.stereotype.Service;
 public class RouterService {
     private final RouteRepository routeRepository;
     private final ValidationHelpers validator;
+    private final StatisticsManager statisticsManager;
 
-    public RouterService(final RouteRepository routeRepository, ValidationHelpers validator) {
+    public RouterService(
+            final RouteRepository routeRepository,
+            ValidationHelpers validator,
+            StatisticsManager statisticsManager) {
         this.routeRepository = routeRepository;
         this.validator = validator;
+        this.statisticsManager = statisticsManager;
     }
 
     /**
@@ -36,6 +44,7 @@ public class RouterService {
                 .alias(options.getAlias())
                 .destination(options.getDestination())
                 .id(UUID.randomUUID().toString())
+                .timestamp(Date.valueOf(LocalDate.now()))
                 .build();
         this.validateRoute(model);
 
@@ -67,24 +76,27 @@ public class RouterService {
 
         Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
         if (existingRoute.isEmpty()) {
+            this.statisticsManager.onFailedRedirect(request);
             throw new NotFoundException("no existing route exists");
         }
 
         Route route = existingRoute.get();
-        return RedirectResult.builder()
+        RedirectResult result = RedirectResult.builder()
                 .destination(route.getDestination())
                 .build();
+        this.statisticsManager.onSuccessfulRedirect(result, request);
+        return result;
     }
 
     private void validateRedirectRequest(RedirectRequest request) {
         if (request.getAlias().isEmpty()) {
-            throw new BadRequestException("route alias is empty");
+            throw new NotFoundException("route is not found");
         }
         if (request.getAlias().length() < 5) {
-            throw new BadRequestException("route alias must be longer than 5 characters");
+            throw new NotFoundException("route is not found");
         }
         if (!this.validator.isValidAlias(request.getAlias())) {
-            throw new BadRequestException("route alias is not alphanumeric");
+            throw new NotFoundException("route is not found");
         }
     }
 

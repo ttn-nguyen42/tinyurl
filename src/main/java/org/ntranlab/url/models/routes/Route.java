@@ -1,5 +1,7 @@
 package org.ntranlab.url.models.routes;
 
+import java.sql.Date;
+
 import org.springframework.lang.NonNull;
 
 import jakarta.persistence.Entity;
@@ -29,4 +31,5 @@ public class Route {
     private String destination;
 
     private boolean disabled;
+    private Date timestamp;
 }

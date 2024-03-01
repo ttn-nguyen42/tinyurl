@@ -1,6 +1,7 @@
 package org.ntranlab.url.routes.redirect;
 
 import org.ntranlab.url.business.routers.RouterService;
+import org.ntranlab.url.helpers.utils.ServletHelpers;
 import org.ntranlab.url.models.redirect.RedirectRequest;
 import org.ntranlab.url.models.redirect.RedirectResult;
 import org.slf4j.Logger;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class RedirectController {
@@ -28,11 +31,16 @@ public class RedirectController {
      * @return RequestMapping
      */
     @RequestMapping(value = "/to/{siteId}", method = RequestMethod.GET)
-    public RedirectView redirect(@PathVariable("siteId") String siteId) {
+    public RedirectView redirect(
+            @PathVariable("siteId") String siteId,
+            HttpServletRequest request) {
         try {
-            RedirectResult result = this.routerService.getRedirection(RedirectRequest.builder()
-                    .alias(siteId)
-                    .build());
+            RedirectResult result = this.routerService
+                    .getRedirection(RedirectRequest.builder()
+                            .alias(siteId)
+                            .ip(ServletHelpers.getRequestIp(request))
+                            .userAgent(ServletHelpers.getUserAgent(request))
+                            .build());
             String destination = result.getDestination();
             logger.info("RedirectController.redirect: siteId = "
                     + siteId
