@@ -1,6 +1,6 @@
 package org.ntranlab.url.models.statistics;
 
-import org.ntranlab.url.configs.ApplicationConfigs.InfluxDbConfigs;
+import org.ntranlab.url.configs.InfluxDbConfigs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -21,10 +21,10 @@ public class StatisticsRepository {
     private Logger logger = LoggerFactory.getLogger(StatisticsRepository.class);
 
     private InfluxDBClient influxDb;
-    private final InfluxDbConfigs configs;
+    private InfluxDbConfigs configs;
     private WriteApi writer;
 
-    public StatisticsRepository(final InfluxDbConfigs configs) {
+    public StatisticsRepository(InfluxDbConfigs configs) {
         this.configs = configs;
     }
 
