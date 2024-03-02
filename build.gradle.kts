@@ -49,4 +49,3 @@ hibernate {
         enableAssociationManagement.set(true)
     }
 }
-

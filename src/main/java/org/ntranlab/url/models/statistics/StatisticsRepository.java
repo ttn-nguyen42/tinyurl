@@ -1,26 +1,24 @@
 package org.ntranlab.url.models.statistics;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-
-import org.ntranlab.url.configs.InfluxDbConfigs;
-import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
-
 import com.influxdb.LogLevel;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.WriteApi;
 import com.influxdb.client.WriteOptions;
 import com.influxdb.client.domain.WritePrecision;
-
 import io.reactivex.rxjava3.core.BackpressureOverflowStrategy;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import org.ntranlab.url.configs.InfluxDbConfigs;
+import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Repository;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class StatisticsRepository {
@@ -104,16 +102,14 @@ public class StatisticsRepository {
 
     public void recordSiteView(SiteViewStats stats) {
         this.logger.debug("StatisticsRepository.recordSiteView: stats = " + stats.toString());
-        if (stats != null) {
-            this.writer.writeMeasurement(
-                    this.configs.getBucket(),
-                    this.configs.getOrganization(),
-                    WritePrecision.S,
-                    stats);
-        }
+        this.writer.writeMeasurement(
+                this.configs.getBucket(),
+                this.configs.getOrganization(),
+                WritePrecision.S,
+                stats);
     }
 
-    public List<SiteViewStats> getSiteViewStats(
+    public List<SiteViewStats.SiteViewBySuccess> getSiteViewStats(
             Optional<String> siteId,
             Date start,
             Date stop,
@@ -127,7 +123,7 @@ public class StatisticsRepository {
                 ip);
         logger.info("StatisticsRepository.getSiteViewStats: query = " + q);
         return this.influxDb.getQueryApi()
-                .query(q, this.configs.getOrganization(), SiteViewStats.class);
+                .query(q, this.configs.getOrganization(), SiteViewStats.SiteViewBySuccess.class);
     }
 
     private String getSiteViewStatsQueryBuilder(
@@ -145,20 +141,22 @@ public class StatisticsRepository {
         String startStr = this.rfc3339Formatter.format(start);
         String endStr = this.rfc3339Formatter.format(stop);
         String base = "from(bucket: \"tinyurl\") |> range(start: " + startStr
-                + ", stop: " + endStr + ") |> filter(fn: (r) => r[\"_measurement\"] == \""
-                + this.configs.getBucket() + "\")";
+                + ", stop: " + endStr + ") |> filter(fn: (r) => r[\"_measurement\"] == \"site_view\")";
         base += siteId.map(sid -> {
-            if (sid != null && !sid.isBlank()) {
-                return " |> filter(fn: (r) => r[\"siteId\"] == \"" + sid + "\")";
+            if (!sid.isBlank()) {
+                return " |> filter(fn: (r) => r[\"site_id\"] == \"" + sid + "\")";
             }
             return "";
         }).orElse("");
         base += success.map(s -> {
-            if (s != null) {
-                if (s.booleanValue()) {
-                    return " |> filter(fn: (r) => r[\"success\"] == \"true\")";
-                }
-                return " |> filter(fn: (r) => r[\"success\"] == \"false\")";
+            if (s) {
+                return " |> filter(fn: (r) => r[\"_value\"] == \"true\")";
+            }
+            return " |> filter(fn: (r) => r[\"_value\"] == \"false\")";
+        }).orElse("");
+        base += ip.map(i -> {
+            if (!i.isBlank()) {
+                return " |> filter(fn: (r) => r[\"ip\"] == \"" + i + "\")";
             }
             return "";
         }).orElse("");

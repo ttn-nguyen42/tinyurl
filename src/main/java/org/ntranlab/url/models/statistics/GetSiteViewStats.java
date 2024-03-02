@@ -1,13 +1,8 @@
 package org.ntranlab.url.models.statistics;
 
-import java.util.List;
+import lombok.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,7 +11,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @Builder
 public class GetSiteViewStats {
-    private List<SiteViewStats> stats;
+    private List<SiteViewStats.SiteViewBySuccess> stats;
 
     private int size;
 }
