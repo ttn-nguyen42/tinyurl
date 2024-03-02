@@ -1,5 +1,8 @@
 package org.ntranlab.url.business.statistics;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +61,30 @@ public class StatisticsManager {
         executor.submit(() -> {
             this.sRepository.recordSiteView(stats);
         });
+    }
+
+    /**
+     * Retrives the statistics recorded of redirections
+     * 
+     * @param siteId
+     * @param start
+     * @param stop
+     * @param success
+     * @param ip
+     * @return
+     */
+    public List<SiteViewStats> getSiteViewStats(
+            Optional<String> siteId,
+            Date start,
+            Date stop,
+            Optional<Boolean> success,
+            Optional<String> ip) {
+        return this.sRepository.getSiteViewStats(
+                siteId,
+                start,
+                stop,
+                success,
+                ip);
     }
 
     @PreDestroy

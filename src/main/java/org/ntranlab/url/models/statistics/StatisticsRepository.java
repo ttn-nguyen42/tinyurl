@@ -1,6 +1,12 @@
 package org.ntranlab.url.models.statistics;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import org.ntranlab.url.configs.InfluxDbConfigs;
+import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -23,6 +29,8 @@ public class StatisticsRepository {
     private InfluxDBClient influxDb;
     private InfluxDbConfigs configs;
     private WriteApi writer;
+
+    private SimpleDateFormat rfc3339Formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 
     public StatisticsRepository(InfluxDbConfigs configs) {
         this.configs = configs;
@@ -103,6 +111,58 @@ public class StatisticsRepository {
                     WritePrecision.S,
                     stats);
         }
+    }
+
+    public List<SiteViewStats> getSiteViewStats(
+            Optional<String> siteId,
+            Date start,
+            Date stop,
+            Optional<Boolean> success,
+            Optional<String> ip) {
+        String q = this.getSiteViewStatsQueryBuilder(
+                siteId,
+                start,
+                stop,
+                success,
+                ip);
+        logger.info("StatisticsRepository.getSiteViewStats: query = " + q);
+        return this.influxDb.getQueryApi()
+                .query(q, this.configs.getOrganization(), SiteViewStats.class);
+    }
+
+    private String getSiteViewStatsQueryBuilder(
+            Optional<String> siteId,
+            Date start,
+            Date stop,
+            Optional<Boolean> success,
+            Optional<String> ip) {
+        if (start == null || stop == null) {
+            throw new BadRequestException("start and stop dates are required");
+        }
+        if (start.compareTo(stop) > 0) {
+            throw new BadRequestException("start date must be before stop date");
+        }
+        String startStr = this.rfc3339Formatter.format(start);
+        String endStr = this.rfc3339Formatter.format(stop);
+        String base = "from(bucket: \"tinyurl\") |> range(start: " + startStr
+                + ", stop: " + endStr + ") |> filter(fn: (r) => r[\"_measurement\"] == \""
+                + this.configs.getBucket() + "\")";
+        base += siteId.map(sid -> {
+            if (sid != null && !sid.isBlank()) {
+                return " |> filter(fn: (r) => r[\"siteId\"] == \"" + sid + "\")";
+            }
+            return "";
+        }).orElse("");
+        base += success.map(s -> {
+            if (s != null) {
+                if (s.booleanValue()) {
+                    return " |> filter(fn: (r) => r[\"success\"] == \"true\")";
+                }
+                return " |> filter(fn: (r) => r[\"success\"] == \"false\")";
+            }
+            return "";
+        }).orElse("");
+        return base;
     }
 
 }

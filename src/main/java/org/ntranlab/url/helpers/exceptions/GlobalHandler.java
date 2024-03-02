@@ -65,7 +65,7 @@ public class GlobalHandler extends ResponseEntityExceptionHandler {
     }
 
     private void log(Error error) {
-        logger.warn("GlobalHandler: error = " + error.toString());
+        logger.warn("GlobalHandler: error = " + error.toString(), error);
     }
 
     private Error getBaseError(Exception e) {
