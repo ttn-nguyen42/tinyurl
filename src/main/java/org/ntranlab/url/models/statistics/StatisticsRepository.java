@@ -126,12 +126,48 @@ public class StatisticsRepository {
                 .query(q, this.configs.getOrganization(), SiteViewStats.SiteViewBySuccess.class);
     }
 
+    public List<SiteViewStats.SiteViewCount> getSiteViewCount(
+            Optional<String> siteId,
+            Date start,
+            Date stop,
+            Optional<Boolean> success) {
+        String q = this.getSiteViewCountQueryBuilder(siteId, start, stop, success);
+        logger.info("StatisticsRepository.getSiteViewStats: query = " + q);
+        return this.influxDb.getQueryApi()
+                .query(q, this.configs.getOrganization(), SiteViewStats.SiteViewCount.class);
+    }
+
+
     private String getSiteViewStatsQueryBuilder(
             Optional<String> siteId,
             Date start,
             Date stop,
             Optional<Boolean> success,
             Optional<String> ip) {
+        String base = this.getBaseQuery(start, stop);
+        base += siteId.map(sid -> {
+            if (!sid.isBlank()) {
+                return " |> filter(fn: (r) => r[\"site_id\"] == \"" + sid + "\")";
+            }
+            return "";
+        }).orElse("");
+        base += success.map(s -> {
+            String fieldSelector = " |> filter(fn: (r) => r[\"field\"] == \"success\"";
+            if (s) {
+                return fieldSelector + " |> filter(fn: (r) => r[\"_value\"] == true)";
+            }
+            return fieldSelector + " |> filter(fn: (r) => r[\"_value\"] == false)";
+        }).orElse("");
+        base += ip.map(i -> {
+            if (!i.isBlank()) {
+                return " |> filter(fn: (r) => r[\"ip\"] == \"" + i + "\")";
+            }
+            return "";
+        }).orElse("");
+        return base;
+    }
+
+    private String getBaseQuery(Date start, Date stop) {
         if (start == null || stop == null) {
             throw new BadRequestException("start and stop dates are required");
         }
@@ -140,8 +176,11 @@ public class StatisticsRepository {
         }
         String startStr = this.rfc3339Formatter.format(start);
         String endStr = this.rfc3339Formatter.format(stop);
-        String base = "from(bucket: \"tinyurl\") |> range(start: " + startStr
-                + ", stop: " + endStr + ") |> filter(fn: (r) => r[\"_measurement\"] == \"site_view\")";
+        return "from(bucket: \"tinyurl\") |> range(start: " + startStr + ", stop: " + endStr + ") |> filter(fn: (r) => r[\"_measurement\"] == \"site_view\")";
+    }
+
+    private String getSiteViewCountQueryBuilder(Optional<String> siteId, Date start, Date stop, Optional<Boolean> success) {
+        String base = this.getBaseQuery(start, stop);
         base += siteId.map(sid -> {
             if (!sid.isBlank()) {
                 return " |> filter(fn: (r) => r[\"site_id\"] == \"" + sid + "\")";
@@ -149,17 +188,13 @@ public class StatisticsRepository {
             return "";
         }).orElse("");
         base += success.map(s -> {
+            String fieldSelector = " |> filter(fn: (r) => r[\"_field\"] == \"success\")";
             if (s) {
-                return " |> filter(fn: (r) => r[\"_value\"] == \"true\")";
+                return fieldSelector + " |> filter(fn: (r) => r[\"_value\"] == true)";
             }
-            return " |> filter(fn: (r) => r[\"_value\"] == \"false\")";
+            return fieldSelector + " |> filter(fn: (r) => r[\"_value\"] == false)";
         }).orElse("");
-        base += ip.map(i -> {
-            if (!i.isBlank()) {
-                return " |> filter(fn: (r) => r[\"ip\"] == \"" + i + "\")";
-            }
-            return "";
-        }).orElse("");
+        base += " |> group(columns: [\"_measurement\", \"destination\", \"site_id\", \"_field\"]) |> count() |> yield(name: \"count\")";
         return base;
     }
 

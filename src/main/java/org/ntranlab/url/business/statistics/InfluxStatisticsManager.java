@@ -23,6 +23,7 @@ public class InfluxStatisticsManager implements StatisticsManager {
         this.sRepository = sRepository;
     }
 
+    @Override
     public void onSuccessfulRedirect(RedirectResult redirect, RedirectRequest request) {
         SiteViewStats stats = SiteViewStats.builder()
                 .destination(redirect.getDestination())
@@ -37,7 +38,7 @@ public class InfluxStatisticsManager implements StatisticsManager {
         });
     }
 
-
+    @Override
     public void onFailedRedirect(RedirectRequest request) {
         SiteViewStats stats = SiteViewStats.builder()
                 .destination("")
@@ -52,6 +53,7 @@ public class InfluxStatisticsManager implements StatisticsManager {
         });
     }
 
+    @Override
     public List<SiteViewStats.SiteViewBySuccess> getSiteViewStats(
             Optional<String> siteId,
             Date start,
@@ -64,6 +66,19 @@ public class InfluxStatisticsManager implements StatisticsManager {
                 stop,
                 success,
                 ip);
+    }
+
+    @Override
+    public List<SiteViewStats.SiteViewCount> getSiteViewCount(
+            Optional<String> siteId,
+            Date start,
+            Date end,
+            Optional<Boolean> success) {
+        return this.sRepository.getSiteViewCount(
+                siteId,
+                start,
+                end,
+                success);
     }
 
     @PreDestroy

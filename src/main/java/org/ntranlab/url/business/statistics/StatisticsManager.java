@@ -12,33 +12,49 @@ public interface StatisticsManager {
 
     /**
      * Records the statistics of the redirection
-     * 
-     * @param redirect The result from getting retriving the route
+     *
+     * @param redirect The result from getting retrieving the route
      * @param request  The request to redirect
      */
-    public void onSuccessfulRedirect(RedirectResult redirect, RedirectRequest request);
+    void onSuccessfulRedirect(RedirectResult redirect, RedirectRequest request);
 
     /**
      * Records the statistics of the failed redirection
      * 
      * @param request The request to redirect
      */
-    public void onFailedRedirect(RedirectRequest request);
+    void onFailedRedirect(RedirectRequest request);
 
     /**
-     * Retrives the statistics recorded of redirections
-     * 
-     * @param siteId
-     * @param start
-     * @param stop
-     * @param success
-     * @param ip
-     * @return
+     * Retrieves the statistics recorded of redirections
+     *
+     * @param siteId Alias of the mapping
+     * @param start Beginning date
+     * @param stop End date
+     * @param success Whether the request made was successful
+     * @param ip IP of the user
+     * @return List of SiteViewBySuccess
      */
-    public List<SiteViewStats.SiteViewBySuccess> getSiteViewStats(
+    List<SiteViewStats.SiteViewBySuccess> getSiteViewStats(
             Optional<String> siteId,
             Date start,
             Date stop,
             Optional<Boolean> success,
             Optional<String> ip);
+
+    /**
+     * Retrieves the view count for each mapping
+     *
+     * @param siteId  Alias of the mapping
+     * @param start   Beginning date
+     * @param end     End date
+     * @param success Whether the request made was successful
+     * @return List of SiteViewConut
+     */
+    List<SiteViewStats.SiteViewCount> getSiteViewCount(
+            Optional<String> siteId,
+            Date start,
+            Date end,
+            Optional<Boolean> success);
+
 }

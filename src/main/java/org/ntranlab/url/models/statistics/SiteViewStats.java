@@ -58,4 +58,21 @@ public class SiteViewStats {
         @Column(tag = true, name = "user_agent")
         private String userAgent;
     }
+
+    @Getter
+    @Setter
+    @ToString
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class SiteViewCount {
+        @Column(name = "site_id")
+        private String siteId;
+
+        @Column(name = "destination")
+        private String destination;
+
+        @Column(name = "_value")
+        private Long count;
+    }
 }
