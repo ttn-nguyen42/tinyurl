@@ -1,17 +1,18 @@
 package org.ntranlab.url.business.statistics.mocks;
 
-import org.ntranlab.url.business.statistics.StatisticsManager;
-import org.ntranlab.url.models.redirect.RedirectRequest;
-import org.ntranlab.url.models.redirect.RedirectResult;
-import org.ntranlab.url.models.statistics.SiteViewStats;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import org.ntranlab.url.business.statistics.StatisticsManager;
+import org.ntranlab.url.models.redirect.RedirectRequest;
+import org.ntranlab.url.models.redirect.RedirectResult;
+import org.ntranlab.url.models.statistics.SiteViewStats;
+import org.ntranlab.url.models.statistics.SiteViewStats.SiteViewCount;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MockStatisticsManager implements StatisticsManager {
     private final Logger logger = LoggerFactory.getLogger(MockStatisticsManager.class);
@@ -30,7 +31,7 @@ public class MockStatisticsManager implements StatisticsManager {
 
     @Override
     public List<SiteViewStats.SiteViewBySuccess> getSiteViewStats(Optional<String> siteId, Date start, Date stop,
-                                                                  Optional<Boolean> success, Optional<String> ip) {
+            Optional<Boolean> success, Optional<String> ip) {
         logger.info("MockStatisticsManager.getSiteViewStats: siteId = " + siteId + ", start = " + start
                 + ", stop = " + stop + ", success = " + success + ", ip = " + ip);
         List<SiteViewStats.SiteViewBySuccess> stats = new ArrayList<>();
@@ -42,6 +43,14 @@ public class MockStatisticsManager implements StatisticsManager {
                 .timestamp(Instant.now())
                 .build());
         return stats;
+    }
+
+    @Override
+    public List<SiteViewCount> getSiteViewCount(Optional<String> siteId, Date start, Date end,
+            Optional<Boolean> success) {
+        logger.info("MockStatisticsManager.getSiteViewCount: siteId = " + siteId + ", start = " + start
+                + ", end = " + end + ", success = " + success);
+        return new ArrayList<>();
     }
 
 }

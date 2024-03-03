@@ -1,0 +1,56 @@
+version: "3.9"
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: tinyurl
+      MYSQL_DATABASE: tinyurl
+      MYSQL_USER: tinyurl
+      MYSQL_PASSWORD: tinyurl
+    ports:
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2048M
+    volumes:
+      - ./tinyurl/mysql.data:/var/lib/mysql
+    restart: always
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: influxdb
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: tinyurl@123
+      DOCKER_INFLUXDB_INIT_ORG: dev
+      DOCKER_INFLUXDB_INIT_BUCKET: tinyurl
+      DOCKER_INFLUXDB_INIT_RETENTION: 30d
+      DOCKER_INFUXDB_INIT_ADMIN_TOKEN: tinyurl@api-access-token
+    volumes:
+      - ./tinyurl/influxdb.data:/var/lib/influxdb2
+      - ./tinyurl/influxdb.config:/etc/influxdb2
+    restart: always
+    ports:
+      - "8086:8086"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2048M
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis
+    command: ["redis-server", "--requirepass", "tinyurl@123"]
+    volumes:
+      - ./tinyurl/redis.data:/data
+    restart: always
+    ports:
+      - "6379:6379"
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2048M
