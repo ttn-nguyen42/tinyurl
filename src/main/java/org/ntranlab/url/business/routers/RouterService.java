@@ -30,7 +30,9 @@ public class RouterService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, String, Route> hashops;
-    private static final String HASH_KEY = "ROUTES";
+
+    private static final String HASH_KEY_BY_ID = "ROUTES_BY_ID";
+    private static final String HASH_KEY_BY_ALIAS = "ROUTES_BY_ALIAS";
 
     private final Logger logger = LoggerFactory.getLogger(RouterService.class);
 
@@ -68,8 +70,8 @@ public class RouterService {
         }
 
         this.routeRepository.save(model);
-        this.hashops.put(HASH_KEY, model.getId(), model);
-        this.hashops.put(HASH_KEY, model.getAlias(), model);
+        this.hashops.put(HASH_KEY_BY_ID, model.getId(), model);
+        this.hashops.put(HASH_KEY_BY_ALIAS, model.getAlias(), model);
 
         String shortenUrl = "https://s.ntranlab.com/to/" +
                 model.getAlias();
@@ -89,7 +91,7 @@ public class RouterService {
     public RedirectResult getRedirection(RedirectRequest request) {
         this.validateRedirectRequest(request);
 
-        Route route = this.hashops.get(HASH_KEY, request.getAlias());
+        Route route = this.hashops.get(HASH_KEY_BY_ALIAS, request.getAlias());
         if (route == null) {
             Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
             if (existingRoute.isEmpty()) {

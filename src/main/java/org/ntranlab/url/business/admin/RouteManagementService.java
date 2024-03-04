@@ -9,6 +9,8 @@ import org.ntranlab.url.helpers.query.QueryExecutor;
 import org.ntranlab.url.models.routes.PSRouteRepository;
 import org.ntranlab.url.models.routes.Route;
 import org.ntranlab.url.models.routes.RouteRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +23,11 @@ public class RouteManagementService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, String, Route> hashops;
-    private static final String HASH_KEY = "ROUTES";
+
+    private static final String HASH_KEY_BY_ID = "ROUTES_BY_ID";
+    private static final String HASH_KEY_BY_ALIAS = "ROUTES_BY_ALIAS";
+
+    private Logger logger = LoggerFactory.getLogger(RouteManagementService.class);
 
     public RouteManagementService(final RouteRepository routeRepository,
             final PSRouteRepository psRouteRepository,
@@ -40,8 +46,7 @@ public class RouteManagementService {
      * @return List of routes
      */
     public List<Route> getRoutes(List<String> ids, Pageable pageable) {
-        return QueryExecutor
-                .<List<Route>>builder()
+        return QueryExecutor.<List<Route>>builder()
                 .pageable(pageable)
                 .onPaged(p -> {
                     if (ids.isEmpty()) {
@@ -116,8 +121,8 @@ public class RouteManagementService {
 
         this.routeRepository.save(updatedRoute);
 
-        this.hashops.put(HASH_KEY, id, updatedRoute);
-        this.hashops.put(HASH_KEY, updatedRoute.getAlias(), updatedRoute);
+        this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
+        this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
     }
 
     /**
@@ -143,8 +148,8 @@ public class RouteManagementService {
 
         this.routeRepository.save(updatedRoute);
 
-        this.hashops.put(HASH_KEY, id, updatedRoute);
-        this.hashops.put(HASH_KEY, updatedRoute.getAlias(), updatedRoute);
+        this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
+        this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
     }
 
     /**
@@ -163,9 +168,9 @@ public class RouteManagementService {
         }
 
         this.routeRepository.deleteById(id);
-        this.hashops.delete(HASH_KEY, route.get()
+        this.hashops.delete(HASH_KEY_BY_ID, route.get()
                 .getId());
-        this.hashops.delete(HASH_KEY, route.get()
+        this.hashops.delete(HASH_KEY_BY_ALIAS, route.get()
                 .getAlias());
     }
 
