@@ -4,6 +4,8 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.ntranlab.url.business.statistics.StatisticsManager;
 import org.ntranlab.url.helpers.exceptions.types.AlreadyExistsException;
@@ -35,6 +37,7 @@ public class RouterService {
     private static final String HASH_KEY_BY_ALIAS = "ROUTES_BY_ALIAS";
 
     private final Logger logger = LoggerFactory.getLogger(RouterService.class);
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public RouterService(
             final RouteRepository routeRepository,
@@ -70,8 +73,12 @@ public class RouterService {
         }
 
         this.routeRepository.save(model);
-        this.hashops.put(HASH_KEY_BY_ID, model.getId(), model);
-        this.hashops.put(HASH_KEY_BY_ALIAS, model.getAlias(), model);
+
+        this.executor.submit(() -> {
+            this.hashops.put(HASH_KEY_BY_ID, model.getId(), model);
+            this.hashops.put(HASH_KEY_BY_ALIAS, model.getAlias(), model);
+            this.logger.info("RouterService.addRoute: updated cache for route alias = " + model.getAlias());
+        });
 
         String shortenUrl = "https://s.ntranlab.com/to/" +
                 model.getAlias();
@@ -92,27 +99,38 @@ public class RouterService {
         this.validateRedirectRequest(request);
 
         Route route = this.hashops.get(HASH_KEY_BY_ALIAS, request.getAlias());
-        if (route == null) {
-            Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
-            if (existingRoute.isEmpty()) {
-                this.statisticsManager.onFailedRedirect(request);
-                throw new NotFoundException("no existing route exists");
-            }
-            route = existingRoute.get();
-            this.logger.info("RouterService.getRedirection: database hit for route alias = " + request.getAlias());
-        } else {
+        if (route != null) {
             this.logger.info("RouterService.getRedirection: cache hit for route alias = " + request.getAlias());
+            RedirectResult result = RedirectResult.builder()
+                    .destination(route.getDestination())
+                    .build();
+            this.statisticsManager.onSuccessfulRedirect(result, request);
+            return result;
+
+        }
+        Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
+        if (existingRoute.isEmpty()) {
+            this.statisticsManager.onFailedRedirect(request);
+            throw new NotFoundException("no existing route exists");
         }
 
-        this.logger.info("RouterService.getRedirection: route = " + route.toString());
+        this.logger.info("RouterService.getRedirection: database hit for route alias = " + request.getAlias());
+        final Route r = existingRoute.get();
 
-        if (route.isDisabled()) {
+        this.executor.submit(() -> {
+            this.hashops.put(HASH_KEY_BY_ID, r.getId(), r);
+            this.hashops.put(HASH_KEY_BY_ALIAS, r.getAlias(), r);
+        });
+
+        this.logger.info("RouterService.getRedirection: route = " + r.toString());
+
+        if (r.isDisabled()) {
             this.statisticsManager.onFailedRedirect(request);
             throw new NotFoundException("route is disabled");
         }
 
         RedirectResult result = RedirectResult.builder()
-                .destination(route.getDestination())
+                .destination(r.getDestination())
                 .build();
         this.statisticsManager.onSuccessfulRedirect(result, request);
         return result;

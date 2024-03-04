@@ -3,6 +3,8 @@ package org.ntranlab.url.business.admin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
 import org.ntranlab.url.helpers.query.QueryExecutor;
@@ -28,6 +30,7 @@ public class RouteManagementService {
     private static final String HASH_KEY_BY_ALIAS = "ROUTES_BY_ALIAS";
 
     private Logger logger = LoggerFactory.getLogger(RouteManagementService.class);
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public RouteManagementService(final RouteRepository routeRepository,
             final PSRouteRepository psRouteRepository,
@@ -121,8 +124,12 @@ public class RouteManagementService {
 
         this.routeRepository.save(updatedRoute);
 
-        this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
-        this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
+        this.executor.submit(() -> {
+            this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
+            this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
+            this.logger.info("RouteManagementService.disableRoute: updated cache on disable route alias = " +
+                    updatedRoute.getAlias());
+        });
     }
 
     /**
@@ -148,8 +155,12 @@ public class RouteManagementService {
 
         this.routeRepository.save(updatedRoute);
 
-        this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
-        this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
+        this.executor.submit(() -> {
+            this.hashops.put(HASH_KEY_BY_ID, id, updatedRoute);
+            this.hashops.put(HASH_KEY_BY_ALIAS, updatedRoute.getAlias(), updatedRoute);
+            this.logger.info("RouteManagementService.enableRoute: updated cache on enable route alias = " +
+                    updatedRoute.getAlias());
+        });
     }
 
     /**
@@ -168,10 +179,15 @@ public class RouteManagementService {
         }
 
         this.routeRepository.deleteById(id);
-        this.hashops.delete(HASH_KEY_BY_ID, route.get()
-                .getId());
-        this.hashops.delete(HASH_KEY_BY_ALIAS, route.get()
-                .getAlias());
+
+        this.executor.submit(() -> {
+            this.hashops.delete(HASH_KEY_BY_ID, route.get()
+                    .getId());
+            this.hashops.delete(HASH_KEY_BY_ALIAS, route.get()
+                    .getAlias());
+            this.logger.info("RouteManagementService.deleteRoute: route deleted from cache alias = " + route.get()
+                    .getAlias());
+        });
     }
 
 }
