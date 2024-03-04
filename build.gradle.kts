@@ -38,6 +38,10 @@ dependencies {
     implementation("commons-validator:commons-validator:1.8.0")
     
     implementation("com.influxdb:influxdb-client-java:6.6.0")
+
+    // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis:3.2.3")
+
 }
 
 tasks.withType<Test> {

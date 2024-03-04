@@ -1,6 +1,12 @@
 
 package org.ntranlab.url.routes.manager;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+
 import org.ntranlab.url.business.statistics.StatisticsManager;
 import org.ntranlab.url.helpers.exceptions.types.BadRequestException;
 import org.ntranlab.url.helpers.query.DurationConverter;
@@ -9,19 +15,15 @@ import org.ntranlab.url.models.statistics.GetSiteViewStats;
 import org.ntranlab.url.models.statistics.SiteViewStats;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
-
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class StatisticsController {
     private final StatisticsManager statisticsManager;
-    private final SimpleDateFormat rfc3339Formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
 
     private final Logger logger = LoggerFactory.getLogger(StatisticsController.class);
 
@@ -34,10 +36,10 @@ public class StatisticsController {
      * 
      * @path /stats/redirections
      * @method GET
-     * @param siteId    Alias or site ID of the mapping to include
-     * @param since     Data since
-     * @param success   Filters out success or failed attempts
-     * @param ip        Filters out IP
+     * @param siteId  Alias or site ID of the mapping to include
+     * @param since   Data since
+     * @param success Filters out success or failed attempts
+     * @param ip      Filters out IP
      * @return List of SiteViewStats
      */
     @RequestMapping(value = "/stats/redirects", method = RequestMethod.GET)

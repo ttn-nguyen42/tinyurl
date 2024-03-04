@@ -16,6 +16,10 @@ import org.ntranlab.url.models.routes.CreateRouteResponse;
 import org.ntranlab.url.models.routes.Route;
 import org.ntranlab.url.models.routes.RouteOptions;
 import org.ntranlab.url.models.routes.RouteRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,13 +28,22 @@ public class RouterService {
     private final ValidationHelpers validator;
     private final StatisticsManager statisticsManager;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+    private HashOperations<String, String, Route> hashops;
+    private static final String HASH_KEY = "ROUTES";
+
+    private final Logger logger = LoggerFactory.getLogger(RouterService.class);
+
     public RouterService(
             final RouteRepository routeRepository,
             ValidationHelpers validator,
-            StatisticsManager statisticsManager) {
+            StatisticsManager statisticsManager,
+            final RedisTemplate<String, Object> redisTemplate) {
         this.routeRepository = routeRepository;
         this.validator = validator;
         this.statisticsManager = statisticsManager;
+        this.redisTemplate = redisTemplate;
+        this.hashops = this.redisTemplate.opsForHash();
     }
 
     /**
@@ -55,6 +68,8 @@ public class RouterService {
         }
 
         this.routeRepository.save(model);
+        this.hashops.put(HASH_KEY, model.getId(), model);
+        this.hashops.put(HASH_KEY, model.getAlias(), model);
 
         String shortenUrl = "https://s.ntranlab.com/to/" +
                 model.getAlias();
@@ -74,13 +89,26 @@ public class RouterService {
     public RedirectResult getRedirection(RedirectRequest request) {
         this.validateRedirectRequest(request);
 
-        Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
-        if (existingRoute.isEmpty()) {
-            this.statisticsManager.onFailedRedirect(request);
-            throw new NotFoundException("no existing route exists");
+        Route route = this.hashops.get(HASH_KEY, request.getAlias());
+        if (route == null) {
+            Optional<Route> existingRoute = this.routeRepository.findByAlias(request.getAlias());
+            if (existingRoute.isEmpty()) {
+                this.statisticsManager.onFailedRedirect(request);
+                throw new NotFoundException("no existing route exists");
+            }
+            route = existingRoute.get();
+            this.logger.info("RouterService.getRedirection: database hit for route alias = " + request.getAlias());
+        } else {
+            this.logger.info("RouterService.getRedirection: cache hit for route alias = " + request.getAlias());
         }
 
-        Route route = existingRoute.get();
+        this.logger.info("RouterService.getRedirection: route = " + route.toString());
+
+        if (route.isDisabled()) {
+            this.statisticsManager.onFailedRedirect(request);
+            throw new NotFoundException("route is disabled");
+        }
+
         RedirectResult result = RedirectResult.builder()
                 .destination(route.getDestination())
                 .build();

@@ -1,5 +1,6 @@
 package org.ntranlab.url.models.routes;
 
+import java.io.Serializable;
 import java.sql.Date;
 
 import org.springframework.lang.NonNull;
@@ -20,7 +21,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-public class Route {
+public class Route implements Serializable{
     @Id
     private String id;
 

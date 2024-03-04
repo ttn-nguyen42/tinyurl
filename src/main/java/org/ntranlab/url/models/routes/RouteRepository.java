@@ -15,4 +15,5 @@ public interface RouteRepository extends CrudRepository<Route, String> {
     @Query("SELECT r FROM Route r WHERE r.alias = :alias AND r.disabled = false")
     Optional<Route> findByAliasAndEnabled(
             @Param("alias") String alias);
+
 }

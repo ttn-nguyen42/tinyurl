@@ -10,6 +10,8 @@ import org.ntranlab.url.models.routes.PSRouteRepository;
 import org.ntranlab.url.models.routes.Route;
 import org.ntranlab.url.models.routes.RouteRepository;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,9 +19,17 @@ public class RouteManagementService {
     private final RouteRepository routeRepository;
     private final PSRouteRepository psRouteRepository;
 
-    public RouteManagementService(final RouteRepository routeRepository, final PSRouteRepository psRouteRepository) {
+    private final RedisTemplate<String, Object> redisTemplate;
+    private HashOperations<String, String, Route> hashops;
+    private static final String HASH_KEY = "ROUTES";
+
+    public RouteManagementService(final RouteRepository routeRepository,
+            final PSRouteRepository psRouteRepository,
+            final RedisTemplate<String, Object> redisTemplate) {
         this.routeRepository = routeRepository;
         this.psRouteRepository = psRouteRepository;
+        this.redisTemplate = redisTemplate;
+        this.hashops = this.redisTemplate.opsForHash();
     }
 
     /**
@@ -101,8 +111,13 @@ public class RouteManagementService {
         if (updatedRoute.isDisabled()) {
             return;
         }
+
         updatedRoute.setDisabled(true);
+
         this.routeRepository.save(updatedRoute);
+
+        this.hashops.put(HASH_KEY, id, updatedRoute);
+        this.hashops.put(HASH_KEY, updatedRoute.getAlias(), updatedRoute);
     }
 
     /**
@@ -125,7 +140,11 @@ public class RouteManagementService {
             return;
         }
         updatedRoute.setDisabled(false);
+
         this.routeRepository.save(updatedRoute);
+
+        this.hashops.put(HASH_KEY, id, updatedRoute);
+        this.hashops.put(HASH_KEY, updatedRoute.getAlias(), updatedRoute);
     }
 
     /**
@@ -144,6 +163,10 @@ public class RouteManagementService {
         }
 
         this.routeRepository.deleteById(id);
+        this.hashops.delete(HASH_KEY, route.get()
+                .getId());
+        this.hashops.delete(HASH_KEY, route.get()
+                .getAlias());
     }
 
 }
