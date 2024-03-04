@@ -42,7 +42,7 @@ public class StatisticsController {
      * @param ip      Filters out IP
      * @return List of SiteViewStats
      */
-    @RequestMapping(value = "/stats/redirects", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/stats/redirects", method = RequestMethod.GET)
     @ResponseBody
     public GetSiteViewStats getSiteViewStats(
             @RequestParam(name = "siteId", required = false) Optional<String> siteId,
@@ -104,7 +104,7 @@ public class StatisticsController {
      * @param success Filters out success or failed attempts
      * @return List of SiteViewCount
      */
-    @RequestMapping(value = "/stats/counts", method = RequestMethod.GET)
+    @RequestMapping(value = "/api/stats/counts", method = RequestMethod.GET)
     @ResponseBody
     public GetSiteViewCount getSiteViewCount(
             @RequestParam(name = "siteId", required = false) Optional<String> siteId,

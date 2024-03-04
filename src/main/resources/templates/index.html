@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>URL Shortener</title>
+    <meta name="description" content="URL shortener by ntranlab" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="author" content="ntranlab.com" />
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <button
+            type="button"
+            class="btn btn-navbar"
+            data-toggle="collapse"
+            data-target=".nav-collapse"
+          >
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">URL Shortener</a>
+          <div class="nav-collapse collapse">
+            <ul class="nav">
+              <li class="active">
+                <a href="#">Home</a>
+              </li>
+              <li>
+                <a href="#dashboard">Dashboard</a>
+              </li>
+            </ul>
+          </div>
+          <!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+    <div id="root">
+      <form class="form-signin">
+        <h2>Create your short link</h2>
+        <div class="input-append input-url">
+          <input
+            style="flex: 1"
+            id="appendedInputButton"
+            type="text"
+            placeholder="Enter your URL here"
+          />
+          <button class="btn" type="button">Shorten URL</button>
+        </div>
+        <label>Use a customized alias that maps to your original website</label>
+        <select>
+          <option>s.ntranlab.com</option>
+        </select>
+        <input
+          class="flex: 1"
+          id="prependedInput"
+          type="text"
+          placeholder="Enter your custom alias"
+        />
+      </form>
+      <div class="well well-large">
+        No ads, no payment, no tracking, no cookies, no nothing. Destination
+        URLs are security-checked by
+        <a href="https://radar.cloudflare.com/scan">Cloudflare URL Scanner</a>.
+        Redirects are cached and protected by
+        <a href="https://developers.cloudflare.com/ddos-protection/"
+          >Cloudflare anti-DDOS</a
+        >.
+      </div>
+      <div id="push"></div>
+    </div>
+    <div id="footer">
+      <div class="container footer-split">
+        <p class="muted credit">
+          Created by <a href="nguyen.tran@ntranlab.com">ntranlab</a>
+        </p>
+        <div style="flex: 1"></div>
+        <p class="muted credit">
+          <a href="https://github.com/ttn-nguyen42/tinyurl">GitHub</a>
+        </p>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+  </body>
+  <style type="text/css">
+    html,
+    body {
+      font: 14px/1.231, Verdana, Helvetica, Arial, sans-serif;
+      height: calc(100vh - 5rem);
+      /* The html and body elements cannot have any padding or margin. */
+    }
+
+    /* Wrapper for page content to push down footer */
+    #root {
+      min-height: 100%;
+      height: auto !important;
+      height: 100%;
+      /* Negative indent footer by it's height */
+      margin: 0 auto -60px;
+      width: 50%;
+      max-width: 95%;
+    }
+
+    /* Set the fixed height of the footer here */
+    #push,
+    #footer {
+      height: 60px;
+    }
+    #footer {
+      background-color: #f5f5f5;
+      display: flex;
+      align-items: center;
+    }
+
+    .footer-split {
+      display: flex;
+    }
+
+    .centered {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Lastly, apply responsive CSS fixes as necessary */
+    @media (max-width: 767px) {
+      #footer {
+        margin-left: -20px;
+        margin-right: -20px;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+
+    .form-signin {
+      padding: 19px 29px 29px;
+      margin: 5rem auto 20px;
+      background-color: #fff;
+      border: 1px solid #e5e5e5;
+      -webkit-border-radius: 5px;
+      -moz-border-radius: 5px;
+      border-radius: 5px;
+      -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      -moz-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .input-url {
+      width: 100%;
+      display: flex;
+    }
+  </style>
+</html>

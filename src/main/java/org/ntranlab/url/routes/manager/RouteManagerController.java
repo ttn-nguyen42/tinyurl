@@ -42,7 +42,7 @@ public class RouteManagerController {
          * @body RouteOptions Options to shorten a URL
          * @return CreateRouteResponse
          */
-        @RequestMapping(value = "/routes", method = RequestMethod.POST)
+        @RequestMapping(value = "/api/routes", method = RequestMethod.POST)
         @ResponseBody
         public CreateRouteResponse shorten(@RequestBody RouteOptions options) {
                 logger.info("RouteManagerController.shorten: " + options.toString());
@@ -59,7 +59,7 @@ public class RouteManagerController {
          * @param ids
          * @return List<Route>
          */
-        @RequestMapping(value = "/routes", method = RequestMethod.GET)
+        @RequestMapping(value = "/api/routes", method = RequestMethod.GET)
         @ResponseBody
         public List<Route> getRoutes(
                         Optional<Query> query,
@@ -81,7 +81,7 @@ public class RouteManagerController {
          * 
          * @param id ID of the route
          */
-        @RequestMapping(value = "/routes/enable/{id}", method = RequestMethod.POST)
+        @RequestMapping(value = "/api/routes/enable/{id}", method = RequestMethod.POST)
         @ResponseBody
         public void enableRoute(
                         @PathVariable(name = "id") String id) {
@@ -95,7 +95,7 @@ public class RouteManagerController {
          * 
          * @param id ID of the route
          */
-        @RequestMapping(value = "/routes/disable/{id}", method = RequestMethod.POST)
+        @RequestMapping(value = "/api/routes/disable/{id}", method = RequestMethod.POST)
         @ResponseBody
         public void disableRoute(
                         @PathVariable(name = "id") String id) {
@@ -110,7 +110,7 @@ public class RouteManagerController {
          * 
          * @param id ID of the route
          */
-        @RequestMapping(value = "/routes/{id}", method = RequestMethod.DELETE)
+        @RequestMapping(value = "/api/routes/{id}", method = RequestMethod.DELETE)
         @ResponseBody
         public void deleteRoute(@PathVariable(name = "id") String id) {
                 logger.info("RouteManagerController.deleteRoute: " + id);

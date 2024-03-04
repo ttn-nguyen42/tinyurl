@@ -103,6 +103,7 @@ public class RouterService {
             this.logger.info("RouterService.getRedirection: cache hit for route alias = " + request.getAlias());
             RedirectResult result = RedirectResult.builder()
                     .destination(route.getDestination())
+                    .createdTimestamp(route.getTimestamp())
                     .build();
             this.statisticsManager.onSuccessfulRedirect(result, request);
             return result;
@@ -131,6 +132,7 @@ public class RouterService {
 
         RedirectResult result = RedirectResult.builder()
                 .destination(r.getDestination())
+                .createdTimestamp(r.getTimestamp())
                 .build();
         this.statisticsManager.onSuccessfulRedirect(result, request);
         return result;

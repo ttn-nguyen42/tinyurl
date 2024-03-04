@@ -1,5 +1,7 @@
 package org.ntranlab.url.models.redirect;
 
+import java.util.Date;
+
 import org.springframework.lang.NonNull;
 
 import lombok.AllArgsConstructor;
@@ -18,4 +20,7 @@ import lombok.ToString;
 public class RedirectResult {
     @NonNull
     String destination;
+
+    @NonNull
+    Date createdTimestamp;
 }

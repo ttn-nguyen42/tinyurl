@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title th:text="'Redirecting to' + ${destinationUrl}"></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="refresh"
+      th:attr="content='2; URL=' + ${destinationUrl}"
+    />
+  </head>
+  <body>
+    <h3 th:text="'Redirecting to ' + ${destinationUrl} + '...'"></h3>
+    <a th:href="${destinationUrl}">Click here if you are not redirected</a>
+    <div class="protected-prompt">
+      <strong>Protected!</strong> Your destination URL has been verified to be
+      safe by
+      <a href="https://radar.cloudflare.com/scan">Cloudflare URL Scanner</a>
+    </div>
+    <p style="font-size: 0.75rem">
+      Link was created <i th:text="${timestamp}"></i>
+    </p>
+
+    <div class="credit-wrapper">
+      <div class="well well-small">
+        <p>
+          <b>URL Shortener</b> by
+          <a href="https://s.ntranlab.com">s.ntranlab.com</a>
+        </p>
+      </div>
+    </div>
+  </body>
+  <style type="text/css">
+    body {
+      font: 13px/1.231, Verdana, Helvetica, Arial, sans-serif;
+    }
+    .protected-prompt {
+      margin-top: 2rem;
+    }
+    .credit-wrapper {
+      margin-top: 5rem;
+    }
+  </style>
+</html>

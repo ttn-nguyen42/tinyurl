@@ -1,4 +1,4 @@
-package org.ntranlab.url.routes.redirect;
+package org.ntranlab.url.routes.web;
 
 import org.ntranlab.url.business.routers.RouterService;
 import org.ntranlab.url.helpers.utils.ServletHelpers;
@@ -6,33 +6,38 @@ import org.ntranlab.url.models.redirect.RedirectRequest;
 import org.ntranlab.url.models.redirect.RedirectResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.view.RedirectView;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestController
-public class RedirectController {
+@Controller
+public class WebController {
     private final RouterService routerService;
 
-    private Logger logger = LoggerFactory.getLogger(RedirectController.class);
+    private Logger logger = LoggerFactory.getLogger(WebController.class);
 
-    public RedirectController(RouterService routerService) {
+    public WebController(final RouterService routerService) {
         this.routerService = routerService;
     }
 
     /**
-     * Redirects traffic from siteId to the actual site
-     *
-     * @param siteId Each shorten site is identified by siteId
-     * @return RequestMapping
+     * Returns the front page of the application
+     * 
+     * @param model
+     * @return
      */
-    @RequestMapping(value = "/api/to/{siteId}", method = RequestMethod.GET)
-    public RedirectView redirect(
-            @PathVariable("siteId") String siteId,
+    @GetMapping(value = "/")
+    public String homePage(Model model) {
+        return "index";
+    }
+
+    @GetMapping(value = "/to/{siteId}")
+    public String redirectPage(
+            @PathVariable(name = "siteId", required = true) String siteId,
+            Model model,
             HttpServletRequest request) {
         try {
             RedirectResult result = this.routerService
@@ -42,14 +47,16 @@ public class RedirectController {
                             .userAgent(ServletHelpers.getUserAgent(request))
                             .build());
             String destination = result.getDestination();
-            logger.info("RedirectController.redirect: siteId = "
+            logger.info("WebController.redirect: siteId = "
                     + siteId
                     + ", to = "
                     + destination);
 
-            return new RedirectView(destination);
+            model.addAttribute("destinationUrl", destination);
+            model.addAttribute("timestamp", result.getCreatedTimestamp());
+            return "redirect";
         } catch (Exception e) {
-            logger.warn("RedirectController.redirect: siteId = "
+            logger.warn("WebController.redirect: siteId = "
                     + siteId
                     + ", error = "
                     + e.getMessage());
